@@ -15,6 +15,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
   config: {
     screens: {
       [RouteNames.Tabs]: '',
+      [RouteNames.Onboarding]: 'onboarding',
       [RouteNames.EyeRest]: 'eyerest/:feature?',
       [RouteNames.WaterLog]: 'waterlog/:feature?',
     },

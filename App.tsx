@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -7,22 +7,27 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useFonts, Inter_300Light, Inter_400Regular } from '@expo-google-fonts/inter';
 
-import { RootNavigator, linking } from './src/navigation';
+import { RootNavigator, linking, RouteNames, type RootStackParamList } from './src/navigation';
 import { ThemeProvider, useTheme } from './src/theme';
+import {
+  type Repository,
+  RepositoryProvider,
+  createRepository,
+} from './src/data';
 
-// Keep the splash visible until fonts + first paint are ready.
+// Keep the splash visible until fonts + repository are ready.
 SplashScreen.preventAutoHideAsync().catch(() => {
   // In some environments (tests) this is a no-op; ignore.
 });
 
-function ThemedApp() {
+function ThemedApp({ initialRouteName }: { initialRouteName: keyof RootStackParamList }) {
   const { theme, scheme } = useTheme();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <NavigationContainer linking={linking}>
-        <RootNavigator />
+        <RootNavigator initialRouteName={initialRouteName} />
       </NavigationContainer>
     </View>
   );
@@ -33,6 +38,22 @@ export default function App() {
     'Inter-Light': Inter_300Light,
     'Inter-Regular': Inter_400Regular,
   });
+  const [repo, setRepo] = useState<Repository | null>(null);
+  const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null);
+
+  // Bootstrap the database and decide the initial route before showing UI.
+  useEffect(() => {
+    (async () => {
+      const r = await createRepository();
+      const settings = await r.getSettings();
+      setRepo(r);
+      setInitialRoute(
+        settings.onboardingComplete ? RouteNames.Tabs : RouteNames.Onboarding
+      );
+    })();
+  }, []);
+
+  const ready = (fontsLoaded || fontError) && repo && initialRoute;
 
   const hideSplash = useCallback(async () => {
     try {
@@ -43,21 +64,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (ready) {
       hideSplash();
     }
-  }, [fontsLoaded, fontError, hideSplash]);
+  }, [ready, hideSplash]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!ready) {
     // Splash still covering; render nothing underneath to avoid a flash.
     return null;
   }
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider mode="system">
-        <ThemedApp />
-      </ThemeProvider>
+      <RepositoryProvider repository={repo}>
+        <ThemeProvider mode="system">
+          <ThemedApp initialRouteName={initialRoute} />
+        </ThemeProvider>
+      </RepositoryProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,4 +1,4 @@
-import type { ExpoConfig } from 'expo/config';
+import type { ExpoConfig } from "expo/config";
 
 /**
  * Pause app config. Android-first; iOS deferred (see PRD). The dev client is
@@ -9,20 +9,20 @@ import type { ExpoConfig } from 'expo/config';
  * setting (the ThemeProvider defaults to `mode: 'system'`).
  */
 const config: ExpoConfig = {
-  name: 'Pause',
-  slug: 'pause',
-  version: '1.0.0',
-  orientation: 'portrait',
-  icon: './assets/icon.png',
-  userInterfaceStyle: 'automatic',
-  scheme: 'pause',
+  name: "Pause",
+  slug: "pause",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "automatic",
+  scheme: "pause",
   android: {
-    package: 'com.pause.app', // placeholder — confirm before launch
+    package: "com.pause.app", // placeholder — confirm before launch
     adaptiveIcon: {
-      backgroundColor: '#F4F1EA',
-      foregroundImage: './assets/android-icon-foreground.png',
-      backgroundImage: './assets/android-icon-background.png',
-      monochromeImage: './assets/android-icon-monochrome.png',
+      backgroundColor: "#F4F1EA",
+      foregroundImage: "./assets/android-icon-foreground.png",
+      backgroundImage: "./assets/android-icon-background.png",
+      monochromeImage: "./assets/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
   },
@@ -30,21 +30,27 @@ const config: ExpoConfig = {
   // top-level `splash` field was removed from the typed ExpoConfig). Light =
   // warm cream, dark = charcoal-green, with the on-theme pause mark.
   plugins: [
-    'expo-dev-client',
-    ['expo-build-properties', { android: { minSdkVersion: 26 } }],
+    "expo-dev-client",
+    "expo-sqlite",
+    ["expo-build-properties", { android: { minSdkVersion: 26 } }],
     [
-      'expo-splash-screen',
+      "expo-splash-screen",
       {
-        backgroundColor: '#F4F1EA',
-        image: './assets/splash-icon.png',
-        resizeMode: 'contain' as const,
+        backgroundColor: "#F4F1EA",
+        image: "./assets/splash-icon.png",
+        resizeMode: "contain" as const,
         imageWidth: 200,
-        dark: { backgroundColor: '#1B2A22' },
+        dark: { backgroundColor: "#1B2A22" },
       },
     ],
   ],
   web: {
-    favicon: './assets/favicon.png',
+    favicon: "./assets/favicon.png",
+  },
+  extra: {
+    eas: {
+      projectId: "19c3ffe7-db31-4868-b064-8534260260c3",
+    },
   },
 };
 

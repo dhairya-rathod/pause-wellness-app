@@ -1,14 +1,14 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Pressable, Text } from 'react-native';
 
-import { EyeRestScreen, WaterLogScreen } from '../screens';
+import { EyeRestScreen, WaterLogScreen, OnboardingScreen } from '../screens';
 import { useTheme } from '../theme';
 import { TabsNavigator } from './TabsNavigator';
 import { RouteNames, type RootStackParamList } from './routes';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-export function RootNavigator() {
+export function RootNavigator({ initialRouteName }: { initialRouteName: keyof RootStackParamList }) {
   const { theme } = useTheme();
 
   const baseModalOptions = (title: string) => ({
@@ -38,10 +38,15 @@ export function RootNavigator() {
   );
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName={initialRouteName}>
       <Stack.Screen
         name={RouteNames.Tabs}
         component={TabsNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={RouteNames.Onboarding}
+        component={OnboardingScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

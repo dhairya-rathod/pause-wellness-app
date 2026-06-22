@@ -13,6 +13,7 @@ export const RouteNames = {
   Home: 'Home',
   Stats: 'Stats',
   Settings: 'Settings',
+  Onboarding: 'Onboarding',
   EyeRest: 'EyeRest',
   WaterLog: 'WaterLog',
 } as const;
@@ -31,6 +32,7 @@ export type TabsParamList = {
 
 export type RootStackParamList = {
   Tabs: undefined;
+  Onboarding: undefined;
   // Modal params are optional (the modals open from Home with no params, and
   // from a notification response with a `feature` param in later slices).
   EyeRest: ModalParams | undefined;

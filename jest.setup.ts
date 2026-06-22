@@ -1,4 +1,10 @@
 /// <reference types="jest" />
+
+// Tell React that the test environment supports act() — RNTL wrappers
+// (render, fireEvent, waitFor) handle this; the flag silences the warning
+// for library-internal state updates like navigation.replace.
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 /**
  * App-specific Jest mocks, run after the test environment is installed.
  *
@@ -17,6 +23,32 @@ jest.mock('@expo-google-fonts/inter', () => ({
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve()),
   hideAsync: jest.fn(() => Promise.resolve()),
+}));
+
+/**
+ * expo-sqlite is NOT mocked by jest-expo, so we provide a no-op mock.
+ * Tests that need a real sqlite backend must mock `createRepository` to
+ * inject an InMemoryRepository instead (see __tests__/App.test.tsx).
+ */
+jest.mock('expo-sqlite', () => ({
+  openDatabaseAsync: jest.fn(() => Promise.resolve({})),
+}));
+
+/**
+ * expo-notifications is mocked by jest-expo, but we provide an explicit
+ * default so tests get deterministic grant/deny behaviour. Individual
+ * tests can override `requestPermissionsAsync` via jest.mock re-import
+ * when they need a different resolved value.
+ */
+jest.mock('expo-notifications', () => ({
+  setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
+  requestPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: false, status: 'undetermined' })
+  ),
+  getPermissionsAsync: jest.fn(() =>
+    Promise.resolve({ granted: false, status: 'undetermined' })
+  ),
+  AndroidImportance: { HIGH: 4 },
 }));
 
 jest.mock('react-native-safe-area-context', () => {

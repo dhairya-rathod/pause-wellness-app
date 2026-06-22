@@ -1,20 +1,48 @@
 /// <reference types="jest" />
 import { render } from '@testing-library/react-native';
 
+import { InMemoryRepository } from '../src/data';
+
+// Mock the async database factory so App.tsx never tries to open sqlite.
+// The mock returns an InMemoryRepository — app code still consumes the
+// Repository interface, so this exercises the real composition tree.
+const { createRepository } = require('../src/data/createRepository');
+jest.mock('../src/data/createRepository', () => ({
+  createRepository: jest.fn(),
+}));
+
 import App from '../App';
 
 /**
- * Slice 01 proof-of-life: the app boots to the themed Home screen and renders
- * the two buttons that open the EyeRest and WaterLog modals. This pins the
- * acceptance criterion that Home opens both modals, and exercises the whole
- * provider composition root (fonts, splash, theme, navigation).
+ * Slice 02 App tests. The App now gates on `onboardingComplete` — first
+ * launch shows onboarding, subsequent launches go straight to Home.
+ *
+ * The `createRepository` mock lets us seed the gating decision without
+ * touching sqlite.
  */
 describe('App', () => {
-  it('renders Home with buttons to open the Eye Rest and Water Log modals', async () => {
-    // RNTL 14's render is async (uses test-renderer), so await it.
+  it('shows Home when onboarding is already complete', async () => {
+    (createRepository as jest.Mock).mockResolvedValue(
+      new InMemoryRepository({ onboardingComplete: true })
+    );
+
     const { getByText } = await render(<App />);
 
     expect(getByText('Start Eye Rest')).toBeTruthy();
     expect(getByText('Log Water')).toBeTruthy();
+  });
+
+  it('shows onboarding when onboarding is not complete', async () => {
+    (createRepository as jest.Mock).mockResolvedValue(
+      new InMemoryRepository({ onboardingComplete: false })
+    );
+
+    const { getByText } = await render(<App />);
+
+    // The first onboarding step has a "Next" button (not "Begin" — the
+    // button label is "Next" for steps 0–2).
+    expect(getByText('Next')).toBeTruthy();
+    // The step-0 title "Pause" is rendered in the heading font.
+    expect(getByText('Pause')).toBeTruthy();
   });
 });
