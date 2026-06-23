@@ -1,0 +1,89 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  type ReactNode,
+} from 'react';
+import * as Notifications from 'expo-notifications';
+
+import { useRepository } from '../data';
+import { ensureNotificationChannels } from '../permissions';
+import { rescheduleWaterReminders } from '../scheduling';
+import { useSettings } from './SettingsProvider';
+
+export type SchedulingValue = {
+  /** Force a full water reschedule (e.g. after goal hit). */
+  rescheduleWater: () => Promise<void>;
+};
+
+const SchedulingContext = createContext<SchedulingValue | undefined>(undefined);
+
+/**
+ * Scheduling lifecycle provider.
+ *
+ * - Creates all notification channels on mount (idempotent).
+ * - Reschedules water reminders on mount (app open) and whenever settings
+ *   change (active hours, goal, sound, water-enabled).
+ * - Exposes a `rescheduleWater` imperative handle for callers that need a
+ *   manual reschedule (e.g. goal-hit cancellation).
+ *
+ * Must be placed inside {@link SettingsProvider} (it reads settings
+ * reactively) and above {@link DailyLogProvider} (so DailyLogProvider
+ * can use `rescheduleWater`).
+ */
+export function SchedulingProvider({ children }: { children: ReactNode }) {
+  const repo = useRepository();
+  const { settings } = useSettings();
+
+  const runReschedule = useCallback(async () => {
+    try {
+      await rescheduleWaterReminders({
+        repo,
+        notifications: Notifications,
+      });
+    } catch {
+      // Swallow — a scheduling failure shouldn't crash the tree.
+    }
+  }, [repo]);
+
+  // ---- mount: ensure channels → reschedule ----------------------------
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureNotificationChannels();
+      } catch {
+        // Channels are best-effort.
+      }
+      await runReschedule();
+    })();
+  }, [runReschedule]);
+
+  // ---- reschedule on settings change -----------------------------------
+
+  useEffect(() => {
+    runReschedule();
+  }, [runReschedule, settings]);
+
+  return (
+    <SchedulingContext.Provider value={{ rescheduleWater: runReschedule }}>
+      {children}
+    </SchedulingContext.Provider>
+  );
+}
+
+/**
+ * Returns the scheduling imperative handle.
+ *
+ * Throws if called outside a {@link SchedulingProvider}.
+ */
+export function useScheduling(): SchedulingValue {
+  const ctx = useContext(SchedulingContext);
+  if (!ctx) {
+    throw new Error(
+      'useScheduling must be used within a SchedulingProvider',
+    );
+  }
+  return ctx;
+}

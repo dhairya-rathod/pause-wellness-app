@@ -5,7 +5,8 @@ import {
   type ThemeMode,
 } from '../../types/settings';
 import { emptyLog, type DailyLog } from '../../types/log';
-import type { Repository } from '../Repository';
+import type { Feature } from '../../types/feature';
+import type { Repository, ScheduledNotificationRecord } from '../Repository';
 
 /**
  * Shape of a `settings` row as stored in sqlite.
@@ -30,6 +31,15 @@ type DailyLogRow = {
   date: string;
   eyeBreaks: number;
   waterGlasses: number;
+};
+
+/**
+ * Shape of a `scheduled_notifications` row.
+ */
+type ScheduledNotificationRow = {
+  feature: string;
+  triggerTime: string;
+  notificationId: string;
 };
 
 /**
@@ -115,6 +125,43 @@ export class SqliteRepository implements Repository {
       log.date,
       log.eyeBreaks,
       log.waterGlasses
+    );
+  }
+
+  // ---- scheduled notifications ------------------------------------------
+
+  async getScheduledIds(
+    feature: Feature,
+  ): Promise<ScheduledNotificationRecord[]> {
+    const rows = await this.db.getAllAsync<ScheduledNotificationRow>(
+      'SELECT feature, triggerTime, notificationId FROM scheduled_notifications WHERE feature = ?',
+      feature,
+    );
+    return rows.map((r) => ({
+      feature: r.feature as Feature,
+      triggerTime: r.triggerTime,
+      notificationId: r.notificationId,
+    }));
+  }
+
+  async addScheduledId(
+    feature: Feature,
+    triggerTime: string,
+    notificationId: string,
+  ): Promise<void> {
+    await this.db.runAsync(
+      `INSERT INTO scheduled_notifications (feature, triggerTime, notificationId)
+       VALUES (?, ?, ?)`,
+      feature,
+      triggerTime,
+      notificationId,
+    );
+  }
+
+  async clearScheduledIds(feature: Feature): Promise<void> {
+    await this.db.runAsync(
+      'DELETE FROM scheduled_notifications WHERE feature = ?',
+      feature,
     );
   }
 }

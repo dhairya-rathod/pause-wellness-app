@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 3;
 
 /**
  * Static DDL for the `settings` singleton table.
@@ -38,6 +38,26 @@ CREATE TABLE IF NOT EXISTS daily_log (
 `;
 
 /**
+ * Static DDL for the `scheduled_notifications` table (slice 04).
+ *
+ * One row per scheduled notification. `feature` is 'eye' or 'water';
+ * `triggerTime` is the ISO timestamp of the intended fire time;
+ * `notificationId` is the value returned by `scheduleNotificationAsync`.
+ *
+ * An index on `feature` supports cancel/reschedule by feature.
+ */
+export const CREATE_SCHEDULED_NOTIFICATIONS_TABLE = `
+CREATE TABLE IF NOT EXISTS scheduled_notifications (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  feature TEXT NOT NULL,
+  triggerTime TEXT NOT NULL,
+  notificationId TEXT NOT NULL,
+  createdAt TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sched_feature ON scheduled_notifications(feature);
+`;
+
+/**
  * Run schema migrations against `db` using `PRAGMA user_version`.
  *
  * Each `< N` guard runs when the DB version is below that milestone so that
@@ -45,6 +65,7 @@ CREATE TABLE IF NOT EXISTS daily_log (
  *
  * v0 → v1: enable WAL, create the `settings` table.
  * v1 → v2: create the `daily_log` table.
+ * v2 → v3: create the `scheduled_notifications` table.
  */
 export async function migrate(db: SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>(
@@ -59,6 +80,9 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
   }
   if (user_version < 2) {
     await db.execAsync(CREATE_DAILY_LOG_TABLE);
+  }
+  if (user_version < 3) {
+    await db.execAsync(CREATE_SCHEDULED_NOTIFICATIONS_TABLE);
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

@@ -39,16 +39,36 @@ jest.mock('expo-sqlite', () => ({
  * default so tests get deterministic grant/deny behaviour. Individual
  * tests can override `requestPermissionsAsync` via jest.mock re-import
  * when they need a different resolved value.
+ *
+ * Extended for slice 04 with the scheduling APIs used by waterScheduler
+ * and the notification-response listener used in App.tsx.
  */
 jest.mock('expo-notifications', () => ({
   setNotificationChannelAsync: jest.fn(() => Promise.resolve()),
   requestPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: false, status: 'undetermined' })
+    Promise.resolve({ granted: false, status: 'undetermined' }),
   ),
   getPermissionsAsync: jest.fn(() =>
-    Promise.resolve({ granted: false, status: 'undetermined' })
+    Promise.resolve({ granted: false, status: 'undetermined' }),
   ),
   AndroidImportance: { HIGH: 4 },
+
+  // Scheduling APIs (slice 04)
+  scheduleNotificationAsync: jest.fn(() =>
+    Promise.resolve('scheduled-id-1'),
+  ),
+  cancelScheduledNotificationAsync: jest.fn(() => Promise.resolve()),
+  cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  getAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve([])),
+  SchedulableTriggerInputTypes: { DATE: 'DATE' },
+
+  // Notification listeners (slice 04)
+  addNotificationResponseReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
+  addNotificationReceivedListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
 }));
 
 jest.mock('react-native-safe-area-context', () => {

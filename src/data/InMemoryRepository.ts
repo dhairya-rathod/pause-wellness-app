@@ -1,6 +1,7 @@
 import { DEFAULT_SETTINGS, type Settings } from '../types/settings';
 import { emptyLog, type DailyLog } from '../types/log';
-import type { Repository } from './Repository';
+import type { Feature } from '../types/feature';
+import type { Repository, ScheduledNotificationRecord } from './Repository';
 
 /**
  * In-memory implementation of {@link Repository} — used by contract tests and as
@@ -14,6 +15,7 @@ import type { Repository } from './Repository';
 export class InMemoryRepository implements Repository {
   private settings: Settings;
   private logs = new Map<string, DailyLog>();
+  private scheduled = new Map<Feature, ScheduledNotificationRecord[]>();
 
   constructor(initial?: Partial<Settings>) {
     this.settings = { ...DEFAULT_SETTINGS, ...initial };
@@ -43,5 +45,28 @@ export class InMemoryRepository implements Repository {
 
   async upsertLog(log: DailyLog): Promise<void> {
     this.logs.set(log.date, { ...log });
+  }
+
+  // ---- scheduled notifications ------------------------------------------
+
+  async getScheduledIds(
+    feature: Feature,
+  ): Promise<ScheduledNotificationRecord[]> {
+    const entries = this.scheduled.get(feature) ?? [];
+    return entries.map((e) => ({ ...e }));
+  }
+
+  async addScheduledId(
+    feature: Feature,
+    triggerTime: string,
+    notificationId: string,
+  ): Promise<void> {
+    const entries = this.scheduled.get(feature) ?? [];
+    entries.push({ feature, triggerTime, notificationId });
+    this.scheduled.set(feature, entries);
+  }
+
+  async clearScheduledIds(feature: Feature): Promise<void> {
+    this.scheduled.set(feature, []);
   }
 }

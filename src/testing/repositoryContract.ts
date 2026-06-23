@@ -107,5 +107,56 @@ export function runRepositoryContract(
       expect(recent[0].date).toBe('2026-06-23');
       expect(recent[1].date).toBe('2026-06-22');
     });
+
+    // ---- scheduled notifications (slice 04) -----------------------------
+
+    it('getScheduledIds returns empty before any adds', async () => {
+      const repo = await makeRepo();
+      const ids = await repo.getScheduledIds('water');
+      expect(ids).toEqual([]);
+    });
+
+    it('round-trips an addScheduledId via getScheduledIds', async () => {
+      const repo = await makeRepo();
+      await repo.addScheduledId('water', '2026-06-23T08:00:00.000Z', 'nid-abc');
+      const ids = await repo.getScheduledIds('water');
+      expect(ids).toHaveLength(1);
+      expect(ids[0]).toEqual({
+        feature: 'water',
+        triggerTime: '2026-06-23T08:00:00.000Z',
+        notificationId: 'nid-abc',
+      });
+    });
+
+    it('isolates water and eye scheduled ids', async () => {
+      const repo = await makeRepo();
+      await repo.addScheduledId('water', '2026-06-23T08:00:00.000Z', 'w-1');
+      await repo.addScheduledId('eye', '2026-06-23T08:20:00.000Z', 'e-1');
+
+      const water = await repo.getScheduledIds('water');
+      expect(water).toHaveLength(1);
+      expect(water[0].feature).toBe('water');
+
+      const eye = await repo.getScheduledIds('eye');
+      expect(eye).toHaveLength(1);
+      expect(eye[0].feature).toBe('eye');
+    });
+
+    it('clearScheduledIds removes water but leaves eye intact', async () => {
+      const repo = await makeRepo();
+      await repo.addScheduledId('water', '2026-06-23T08:00:00.000Z', 'w-1');
+      await repo.addScheduledId('eye', '2026-06-23T08:20:00.000Z', 'e-1');
+
+      await repo.clearScheduledIds('water');
+      expect(await repo.getScheduledIds('water')).toEqual([]);
+      expect(await repo.getScheduledIds('eye')).toHaveLength(1);
+    });
+
+    it('clearScheduledIds is idempotent', async () => {
+      const repo = await makeRepo();
+      await repo.clearScheduledIds('water');
+      await repo.clearScheduledIds('water');
+      expect(await repo.getScheduledIds('water')).toEqual([]);
+    });
   });
 }

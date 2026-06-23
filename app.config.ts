@@ -7,6 +7,10 @@ import type { ExpoConfig } from "expo/config";
  *
  * `userInterfaceStyle: 'automatic'` lets the app follow the system light/dark
  * setting (the ThemeProvider defaults to `mode: 'system'`).
+ *
+ * The expo-notifications `sounds` array registers bundled audio for
+ * notification channels on Android; these are referenced by base filename
+ * in the per-channel `sound` option.
  */
 const config: ExpoConfig = {
   name: "Pause",
@@ -26,12 +30,15 @@ const config: ExpoConfig = {
     },
     predictiveBackGestureEnabled: false,
   },
-  // In SDK 56 the splash config lives in the expo-splash-screen plugin (the
-  // top-level `splash` field was removed from the typed ExpoConfig). Light =
-  // warm cream, dark = charcoal-green, with the on-theme pause mark.
   plugins: [
     "expo-dev-client",
     "expo-sqlite",
+    [
+      "expo-notifications",
+      {
+        sounds: ["./assets/sounds/water_chime.mp3", "./assets/sounds/eye_chime.mp3"],
+      },
+    ],
     ["expo-build-properties", { android: { minSdkVersion: 26 } }],
     [
       "expo-splash-screen",

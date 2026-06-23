@@ -6,6 +6,7 @@ import { useRepository } from '../data';
 import { todayKey } from '../types/log';
 import type { DailyState } from './dailyLogReducer';
 import { dailyReducer, initialStateFromLog } from './dailyLogReducer';
+import { useScheduling } from './SchedulingProvider';
 
 /**
  * Value exposed by {@link useDailyLog}.
@@ -35,6 +36,15 @@ export function DailyLogProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<DailyState | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ---- scheduling (soft dep — may be absent in tests) -----------
+
+  let rescheduleWater: (() => Promise<void>) | undefined;
+  try {
+    rescheduleWater = useScheduling().rescheduleWater;
+  } catch {
+    // No SchedulingProvider above us → no-op (test env).
+  }
+
   // ---- initialise / reload today -------------------------------
 
   const loadToday = useCallback(async () => {
@@ -62,10 +72,11 @@ export function DailyLogProvider({ children }: { children: ReactNode }) {
     return () => sub.remove();
   }, [state, loadToday]);
 
-  // ---- actions (pure reducer → persist) -------------------------
+  // ---- actions (pure reducer → persist → side-effect) ------------
 
   const logGlass = useCallback(async () => {
     if (!state) return;
+    const wasHydrated = state.hydrated;
     const next = dailyReducer(state, { type: 'LogGlass' });
     setState(next);
     await repo.upsertLog({
@@ -73,7 +84,17 @@ export function DailyLogProvider({ children }: { children: ReactNode }) {
       eyeBreaks: next.eyeBreaks,
       waterGlasses: next.waterGlasses,
     });
-  }, [repo, state]);
+
+    // Goal-hit: hydrated just transitioned false → true → cancel
+    // today's remaining water reminders.
+    if (!wasHydrated && next.hydrated && rescheduleWater) {
+      try {
+        await rescheduleWater();
+      } catch {
+        // Notification cancellation is best-effort; never break the log.
+      }
+    }
+  }, [repo, state, rescheduleWater]);
 
   const undoGlass = useCallback(async () => {
     if (!state) return;

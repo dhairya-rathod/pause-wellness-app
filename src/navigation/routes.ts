@@ -18,7 +18,7 @@ export const RouteNames = {
   WaterLog: 'WaterLog',
 } as const;
 
-export type Feature = 'eye' | 'water';
+export type { Feature } from '../types/feature';
 
 export type ModalParams = {
   feature?: Feature;
