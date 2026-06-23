@@ -19,6 +19,7 @@ export type DailyLogValue = DailyState & {
   loading: boolean;
   logGlass: () => Promise<void>;
   undoGlass: () => Promise<void>;
+  completeBreak: () => Promise<void>;
 };
 
 const DailyLogContext = createContext<DailyLogValue | undefined>(undefined);
@@ -107,6 +108,17 @@ export function DailyLogProvider({ children }: { children: ReactNode }) {
     });
   }, [repo, state]);
 
+  const completeBreak = useCallback(async () => {
+    if (!state) return;
+    const next = dailyReducer(state, { type: 'CompleteBreak' });
+    setState(next);
+    await repo.upsertLog({
+      date: next.date,
+      eyeBreaks: next.eyeBreaks,
+      waterGlasses: next.waterGlasses,
+    });
+  }, [repo, state]);
+
   // ---- context value --------------------------------------------
 
   const value: DailyLogValue = {
@@ -118,6 +130,7 @@ export function DailyLogProvider({ children }: { children: ReactNode }) {
     loading,
     logGlass,
     undoGlass,
+    completeBreak,
   };
 
   return (

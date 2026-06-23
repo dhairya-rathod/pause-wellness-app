@@ -15,6 +15,7 @@ export type DailyState = {
 export type DailyAction =
   | { type: 'LogGlass' }
   | { type: 'UndoGlass' }
+  | { type: 'CompleteBreak' }
   | { type: 'Rollover'; date: string }
   | { type: 'UpdateSettings'; goal: number };
 
@@ -42,6 +43,8 @@ export function dailyReducer(state: DailyState, action: DailyAction): DailyState
       const waterGlasses = Math.max(0, state.waterGlasses - 1);
       return { ...state, waterGlasses, hydrated: computeHydrated(waterGlasses, state.goal) };
     }
+    case 'CompleteBreak':
+      return { ...state, eyeBreaks: state.eyeBreaks + 1 };
     case 'Rollover':
       return {
         ...state,

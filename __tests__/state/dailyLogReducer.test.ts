@@ -63,6 +63,22 @@ describe('dailyReducer', () => {
     expect(s.hydrated).toBe(false);
   });
 
+  // ---- CompleteBreak -----------------------------------------------------
+
+  it('CompleteBreak increments eyeBreaks by 1', () => {
+    const s = dailyReducer(makeState(), { type: 'CompleteBreak' });
+    expect(s.eyeBreaks).toBe(1);
+  });
+
+  it('CompleteBreak does not affect waterGlasses or hydrated', () => {
+    const s = dailyReducer(
+      makeState({ waterGlasses: 5 }),
+      { type: 'CompleteBreak' }
+    );
+    expect(s.waterGlasses).toBe(5);
+    expect(s.hydrated).toBe(false);
+  });
+
   // ---- Rollover ---------------------------------------------------------
 
   it('Rollover resets waterGlasses and eyeBreaks to 0 with a new date', () => {
