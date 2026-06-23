@@ -4,6 +4,7 @@ import {
   type Settings,
   type ThemeMode,
 } from '../../types/settings';
+import { emptyLog, type DailyLog } from '../../types/log';
 import type { Repository } from '../Repository';
 
 /**
@@ -23,6 +24,15 @@ type SettingsRow = {
 };
 
 /**
+ * Shape of a `daily_log` row as stored in sqlite.
+ */
+type DailyLogRow = {
+  date: string;
+  eyeBreaks: number;
+  waterGlasses: number;
+};
+
+/**
  * Production `Repository` backed by expo-sqlite.
  *
  * Reads and writes a singleton `settings` row keyed `id = 1`.
@@ -32,6 +42,8 @@ type SettingsRow = {
  */
 export class SqliteRepository implements Repository {
   constructor(private db: SQLiteDatabase) {}
+
+  // ---- settings ---------------------------------------------------------
 
   async getSettings(): Promise<Settings> {
     const row = await this.db.getFirstAsync<SettingsRow>(
@@ -66,6 +78,43 @@ export class SqliteRepository implements Repository {
       settings.eyeEnabled ? 1 : 0,
       settings.waterEnabled ? 1 : 0,
       settings.onboardingComplete ? 1 : 0
+    );
+  }
+
+  // ---- daily log --------------------------------------------------------
+
+  async getLog(date: string): Promise<DailyLog> {
+    const row = await this.db.getFirstAsync<DailyLogRow>(
+      'SELECT * FROM daily_log WHERE date = ?',
+      date
+    );
+    if (!row) return emptyLog(date);
+    return {
+      date: row.date,
+      eyeBreaks: row.eyeBreaks,
+      waterGlasses: row.waterGlasses,
+    };
+  }
+
+  async getRecentLogs(days: number): Promise<DailyLog[]> {
+    const rows = await this.db.getAllAsync<DailyLogRow>(
+      'SELECT * FROM daily_log ORDER BY date DESC LIMIT ?',
+      days
+    );
+    return rows.map((r) => ({
+      date: r.date,
+      eyeBreaks: r.eyeBreaks,
+      waterGlasses: r.waterGlasses,
+    }));
+  }
+
+  async upsertLog(log: DailyLog): Promise<void> {
+    await this.db.runAsync(
+      `INSERT OR REPLACE INTO daily_log (date, eyeBreaks, waterGlasses)
+       VALUES (?, ?, ?)`,
+      log.date,
+      log.eyeBreaks,
+      log.waterGlasses
     );
   }
 }

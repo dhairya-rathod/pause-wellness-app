@@ -14,6 +14,7 @@ import {
   RepositoryProvider,
   createRepository,
 } from './src/data';
+import { DailyLogProvider } from './src/state/DailyLogProvider';
 
 // Keep the splash visible until fonts + repository are ready.
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -77,9 +78,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <RepositoryProvider repository={repo}>
-        <ThemeProvider mode="system">
-          <ThemedApp initialRouteName={initialRoute} />
-        </ThemeProvider>
+        <DailyLogProvider>
+          <ThemeProvider mode="system">
+            <ThemedApp initialRouteName={initialRoute} />
+          </ThemeProvider>
+        </DailyLogProvider>
       </RepositoryProvider>
     </SafeAreaProvider>
   );
