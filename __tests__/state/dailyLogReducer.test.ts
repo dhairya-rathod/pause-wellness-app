@@ -1,5 +1,9 @@
 /// <reference types="jest" />
-import { dailyReducer } from '../../src/state/dailyLogReducer';
+import {
+  dailyReducer,
+  rollover,
+  shouldCancelRemainingWater,
+} from '../../src/state/dailyLogReducer';
 import type { DailyState } from '../../src/state/dailyLogReducer';
 
 function makeState(overrides: Partial<DailyState> = {}): DailyState {
@@ -9,6 +13,7 @@ function makeState(overrides: Partial<DailyState> = {}): DailyState {
     eyeBreaks: 0,
     goal: 8,
     hydrated: false,
+    recent: [],
     ...overrides,
   };
 }
@@ -97,6 +102,94 @@ describe('dailyReducer', () => {
       { type: 'Rollover', date: '2026-06-24' }
     );
     expect(s.hydrated).toBe(false);
+  });
+
+  // ---- rollover (pure day-boundary helper) ------------------------------
+
+  describe('rollover', () => {
+    it('returns the same state when the date has not changed', () => {
+      const before = makeState({ date: '2026-06-23' });
+      const after = rollover(before, '2026-06-23');
+      expect(after).toBe(before);
+    });
+
+    it('archives the old day and resets today', () => {
+      const before = makeState({
+        date: '2026-06-23',
+        waterGlasses: 5,
+        eyeBreaks: 3,
+        hydrated: true,
+      });
+      const after = rollover(before, '2026-06-24');
+
+      expect(after.date).toBe('2026-06-24');
+      expect(after.waterGlasses).toBe(0);
+      expect(after.eyeBreaks).toBe(0);
+      expect(after.hydrated).toBe(false);
+      expect(after.recent).toContainEqual({
+        date: '2026-06-23',
+        waterGlasses: 5,
+        eyeBreaks: 3,
+      });
+    });
+
+    it('keeps only the last 7 days', () => {
+      const recent = Array.from({ length: 8 }, (_, i) => ({
+        date: `2026-06-${15 + i}`,
+        eyeBreaks: 1,
+        waterGlasses: 1,
+      }));
+      const before = makeState({ date: '2026-06-23', recent });
+      const after = rollover(before, '2026-06-24');
+
+      expect(after.recent).toHaveLength(7);
+      const dates = after.recent.map((log) => log.date);
+      expect(dates).not.toContain('2026-06-15'); // oldest dropped
+      expect(dates).toContain('2026-06-23'); // newly archived
+    });
+
+    it('replaces an existing entry for the old day instead of duplicating', () => {
+      const before = makeState({
+        date: '2026-06-23',
+        waterGlasses: 5,
+        eyeBreaks: 3,
+        recent: [{ date: '2026-06-23', waterGlasses: 1, eyeBreaks: 1 }],
+      });
+      const after = rollover(before, '2026-06-24');
+
+      expect(after.recent).toHaveLength(1);
+      expect(after.recent[0]).toEqual({
+        date: '2026-06-23',
+        waterGlasses: 5,
+        eyeBreaks: 3,
+      });
+    });
+
+    it('drops future-dated rows from recent (stale guard)', () => {
+      const before = makeState({
+        date: '2026-06-23',
+        recent: [{ date: '2026-06-25', waterGlasses: 1, eyeBreaks: 1 }],
+      });
+      const after = rollover(before, '2026-06-24');
+
+      expect(after.recent.map((log) => log.date)).not.toContain('2026-06-25');
+    });
+  });
+
+  // ---- shouldCancelRemainingWater ---------------------------------------
+
+  describe('shouldCancelRemainingWater', () => {
+    it('returns true when hydrated and goal > 0', () => {
+      expect(shouldCancelRemainingWater({ hydrated: true, goal: 8 })).toBe(true);
+    });
+
+    it('returns false when hydrated but goal is 0', () => {
+      expect(shouldCancelRemainingWater({ hydrated: true, goal: 0 })).toBe(false);
+    });
+
+    it('returns false when not hydrated', () => {
+      expect(shouldCancelRemainingWater({ hydrated: false, goal: 8 })).toBe(false);
+    });
   });
 
   // ---- UpdateSettings ---------------------------------------------------

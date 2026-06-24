@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { SchedulableTriggerInputTypes } from 'expo-notifications';
 
 import type { Repository } from '../data/Repository';
+import { shouldCancelRemainingWater } from '../state/dailyLogReducer';
 import { todayKey } from '../types/log';
 import { computeWaterReminderTimes } from './waterReminders';
 
@@ -60,7 +61,9 @@ export async function rescheduleWaterReminders(
     // Goal already met today? Skip today's batch.
     if (offset === 0) {
       const log = await repo.getLog(todayKey());
-      if (log.waterGlasses >= goal) continue;
+      if (shouldCancelRemainingWater({ hydrated: log.waterGlasses >= goal, goal })) {
+        continue;
+      }
     }
 
     const times = computeWaterReminderTimes(

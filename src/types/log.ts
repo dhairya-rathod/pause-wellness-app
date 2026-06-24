@@ -32,3 +32,30 @@ export function dateKey(d: Date): string {
 export function todayKey(): string {
   return dateKey(new Date());
 }
+
+/**
+ * Parse a local "YYYY-MM-DD" key back into a Date at midnight local time.
+ *
+ * Inverse of {@link dateKey}; used for date arithmetic like generating the
+ * previous N calendar days for the 7-day dot grids.
+ */
+export function parseDateKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Return the `count` most recent calendar dates ending at `endKey`, inclusive.
+ *
+ * Result is ordered oldest → newest so it renders left-to-right as a timeline.
+ */
+export function previousDays(endKey: string, count: number): string[] {
+  const end = parseDateKey(endKey);
+  const days: string[] = [];
+  for (let offset = count - 1; offset >= 0; offset--) {
+    const d = new Date(end);
+    d.setDate(d.getDate() - offset);
+    days.push(dateKey(d));
+  }
+  return days;
+}
