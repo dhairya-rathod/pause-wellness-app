@@ -1,3 +1,5 @@
+import { isSameDay, minutesToDate, parseMinutes } from './timeHelpers';
+
 export type ActiveHours = {
   start: string; // "HH:MM"
   end: string; // "HH:MM"
@@ -41,25 +43,4 @@ export function computeWaterReminderTimes(
 
   // For the anchor's calendar date, keep only times strictly after `now`.
   return times.filter((t) => isSameDay(t, anchor) ? t.getTime() > now.getTime() : true);
-}
-
-// ---- internal helpers ----------------------------------------------------
-
-function parseMinutes(hhmm: string): number {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function minutesToDate(totalMinutes: number, anchor: Date): Date {
-  const d = new Date(anchor);
-  d.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
-  return d;
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
 }

@@ -7,6 +7,7 @@ import { RouteNames, type RootStackParamList } from '../../src/navigation/routes
 import { OnboardingScreen } from '../../src/screens/OnboardingScreen';
 import { RepositoryProvider, InMemoryRepository } from '../../src/data';
 import { HomeScreen } from '../../src/screens/HomeScreen';
+import { SettingsProvider } from '../../src/state/SettingsProvider';
 import { ThemeProvider } from '../../src/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,9 +40,11 @@ function TestNavigator({ initial }: { initial: string }) {
 async function renderOnboarding(repo: InMemoryRepository) {
   return render(
     <RepositoryProvider repository={repo}>
-      <ThemeProvider mode="system">
-        <TestNavigator initial={RouteNames.Onboarding} />
-      </ThemeProvider>
+      <SettingsProvider>
+        <ThemeProvider mode="system">
+          <TestNavigator initial={RouteNames.Onboarding} />
+        </ThemeProvider>
+      </SettingsProvider>
     </RepositoryProvider>
   );
 }

@@ -1,8 +1,9 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 
 import { Button, Screen } from '../components';
+import { useSettings } from '../state/SettingsProvider';
 import { useTheme } from '../theme';
 import { RouteNames, type RootStackParamList } from '../navigation/routes';
 
@@ -11,6 +12,7 @@ type Navigation = NativeStackNavigationProp<RootStackParamList>;
 export function HomeScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<Navigation>();
+  const { settings, updateSettings } = useSettings();
 
   return (
     <Screen>
@@ -34,6 +36,36 @@ export function HomeScreen() {
           >
             A calm moment, whenever you need one.
           </Text>
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: theme.spacing.lg,
+            paddingHorizontal: theme.spacing.lg,
+            borderRadius: theme.radii.lg,
+            backgroundColor: theme.colors.surface,
+            gap: theme.spacing.md,
+          }}
+        >
+          <Text
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.typography.body,
+              fontFamily: theme.typography.familyRegular,
+              flexShrink: 1,
+            }}
+          >
+            Pause eye reminders
+          </Text>
+          <Switch
+            value={settings.eyePaused}
+            onValueChange={(v) => updateSettings({ eyePaused: v })}
+            trackColor={{ true: theme.colors.primary }}
+            accessibilityLabel="Pause eye reminders"
+          />
         </View>
 
         <View style={{ gap: theme.spacing.lg }}>

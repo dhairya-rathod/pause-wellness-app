@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-export const DATABASE_VERSION = 3;
+export const DATABASE_VERSION = 4;
 
 /**
  * Static DDL for the `settings` singleton table.
@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS settings (
   soundEnabled INTEGER NOT NULL,
   themeMode TEXT NOT NULL,
   eyeEnabled INTEGER NOT NULL,
+  eyePaused INTEGER NOT NULL,
   waterEnabled INTEGER NOT NULL,
   onboardingComplete INTEGER NOT NULL
 );
@@ -66,6 +67,7 @@ CREATE INDEX IF NOT EXISTS idx_sched_feature ON scheduled_notifications(feature)
  * v0 → v1: enable WAL, create the `settings` table.
  * v1 → v2: create the `daily_log` table.
  * v2 → v3: create the `scheduled_notifications` table.
+ * v3 → v4: add `eyePaused` column to `settings`.
  */
 export async function migrate(db: SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>(
@@ -83,6 +85,11 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
   }
   if (user_version < 3) {
     await db.execAsync(CREATE_SCHEDULED_NOTIFICATIONS_TABLE);
+  }
+  if (user_version < 4) {
+    await db.execAsync(
+      `ALTER TABLE settings ADD COLUMN eyePaused INTEGER NOT NULL DEFAULT 0;`
+    );
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

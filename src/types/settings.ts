@@ -15,6 +15,7 @@ export type Settings = {
   soundEnabled: boolean;
   themeMode: ThemeMode;
   eyeEnabled: boolean;
+  eyePaused: boolean;
   waterEnabled: boolean;
   onboardingComplete: boolean;
 };
@@ -26,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   soundEnabled: true,
   themeMode: 'system',
   eyeEnabled: true,
+  eyePaused: false,
   waterEnabled: true,
   onboardingComplete: false,
 };

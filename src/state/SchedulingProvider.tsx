@@ -9,7 +9,7 @@ import * as Notifications from 'expo-notifications';
 
 import { useRepository } from '../data';
 import { ensureNotificationChannels } from '../permissions';
-import { rescheduleWaterReminders } from '../scheduling';
+import { rescheduleEyeReminders, rescheduleWaterReminders } from '../scheduling';
 import { useSettings } from './SettingsProvider';
 
 export type SchedulingValue = {
@@ -23,8 +23,8 @@ const SchedulingContext = createContext<SchedulingValue | undefined>(undefined);
  * Scheduling lifecycle provider.
  *
  * - Creates all notification channels on mount (idempotent).
- * - Reschedules water reminders on mount (app open) and whenever settings
- *   change (active hours, goal, sound, water-enabled).
+ * - Reschedules water and eye reminders on mount (app open) and whenever
+ *   settings change (active hours, sound, feature enabled/disabled, pause).
  * - Exposes a `rescheduleWater` imperative handle for callers that need a
  *   manual reschedule (e.g. goal-hit cancellation).
  *
@@ -38,10 +38,16 @@ export function SchedulingProvider({ children }: { children: ReactNode }) {
 
   const runReschedule = useCallback(async () => {
     try {
-      await rescheduleWaterReminders({
-        repo,
-        notifications: Notifications,
-      });
+      await Promise.allSettled([
+        rescheduleWaterReminders({
+          repo,
+          notifications: Notifications,
+        }),
+        rescheduleEyeReminders({
+          repo,
+          notifications: Notifications,
+        }),
+      ]);
     } catch {
       // Swallow — a scheduling failure shouldn't crash the tree.
     }

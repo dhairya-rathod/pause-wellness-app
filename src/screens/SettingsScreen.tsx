@@ -135,7 +135,7 @@ export function SettingsScreen() {
           <View style={{ flexShrink: 1 }}>
             <Text style={label}>Eye reminders</Text>
             <Text style={muted}>
-              Eye reminders arrive in a later update
+              Gentle 20-20-20 nudges during active hours
             </Text>
           </View>
           <Switch

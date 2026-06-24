@@ -20,6 +20,7 @@ type SettingsRow = {
   soundEnabled: number;
   themeMode: string;
   eyeEnabled: number;
+  eyePaused: number;
   waterEnabled: number;
   onboardingComplete: number;
 };
@@ -69,6 +70,7 @@ export class SqliteRepository implements Repository {
       soundEnabled: !!row.soundEnabled,
       themeMode: row.themeMode as ThemeMode,
       eyeEnabled: !!row.eyeEnabled,
+      eyePaused: !!row.eyePaused,
       waterEnabled: !!row.waterEnabled,
       onboardingComplete: !!row.onboardingComplete,
     };
@@ -78,14 +80,15 @@ export class SqliteRepository implements Repository {
     await this.db.runAsync(
       `INSERT OR REPLACE INTO settings
         (id, activeHoursStart, activeHoursEnd, waterGoalGlasses, soundEnabled,
-         themeMode, eyeEnabled, waterEnabled, onboardingComplete)
-       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         themeMode, eyeEnabled, eyePaused, waterEnabled, onboardingComplete)
+       VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       settings.activeHoursStart,
       settings.activeHoursEnd,
       settings.waterGoalGlasses,
       settings.soundEnabled ? 1 : 0,
       settings.themeMode,
       settings.eyeEnabled ? 1 : 0,
+      settings.eyePaused ? 1 : 0,
       settings.waterEnabled ? 1 : 0,
       settings.onboardingComplete ? 1 : 0
     );
