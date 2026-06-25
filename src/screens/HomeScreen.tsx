@@ -1,8 +1,8 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Switch, Text, View } from 'react-native';
+import { Pressable, Switch, View } from 'react-native';
 
-import { Button, Screen } from '../components';
+import { Button, Screen, Text } from '../components';
 import { useSettings } from '../state/SettingsProvider';
 import { useTheme } from '../theme';
 import { RouteNames, type RootStackParamList } from '../navigation/routes';
@@ -38,7 +38,9 @@ export function HomeScreen() {
           </Text>
         </View>
 
-        <View
+        <Pressable
+          onPress={() => updateSettings({ eyePaused: !settings.eyePaused })}
+          accessible={false}
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -65,20 +67,23 @@ export function HomeScreen() {
             onValueChange={(v) => updateSettings({ eyePaused: v })}
             trackColor={{ true: theme.colors.primary }}
             accessibilityLabel="Pause eye reminders"
+            accessibilityHint="Pauses eye-break reminders until turned back on"
           />
-        </View>
+        </Pressable>
 
         <View style={{ gap: theme.spacing.lg }}>
           <Button
             label="Start Eye Rest"
             onPress={() => navigation.navigate(RouteNames.EyeRest)}
             accessibilityLabel="Start eye rest"
+            accessibilityHint="Opens a 20-second guided eye break"
           />
           <Button
             label="Log Water"
             variant="secondary"
             onPress={() => navigation.navigate(RouteNames.WaterLog)}
             accessibilityLabel="Log water"
+            accessibilityHint="Opens the water log"
           />
         </View>
       </View>

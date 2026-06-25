@@ -20,29 +20,37 @@ const Tabs = createBottomTabNavigator<TabsParamList>();
  * in a proper icon set.
  */
 function TabMark({ color, shape }: { color: string; shape: 'circle' | 'grid' | 'sliders' }) {
-  if (shape === 'grid') {
-    return (
-      <View style={{ flexDirection: 'row', gap: 3 }}>
-        {[0, 1].map((r) => (
-          <View key={r} style={{ flexDirection: 'column', gap: 3 }}>
-            {[0, 1].map((c) => (
-              <View key={c} style={{ width: 6, height: 6, borderRadius: 2, backgroundColor: color }} />
-            ))}
-          </View>
-        ))}
-      </View>
-    );
-  }
-  if (shape === 'sliders') {
-    return (
-      <View style={{ flexDirection: 'column', gap: 4 }}>
-        {[0, 1, 2].map((i) => (
-          <View key={i} style={{ width: 16, height: 2, borderRadius: 1, backgroundColor: color }} />
-        ))}
-      </View>
-    );
-  }
-  return <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />;
+  const mark = (() => {
+    if (shape === 'grid') {
+      return (
+        <View style={{ flexDirection: 'row', gap: 3 }}>
+          {[0, 1].map((r) => (
+            <View key={r} style={{ flexDirection: 'column', gap: 3 }}>
+              {[0, 1].map((c) => (
+                <View key={c} style={{ width: 6, height: 6, borderRadius: 2, backgroundColor: color }} />
+              ))}
+            </View>
+          ))}
+        </View>
+      );
+    }
+    if (shape === 'sliders') {
+      return (
+        <View style={{ flexDirection: 'column', gap: 4 }}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ width: 16, height: 2, borderRadius: 1, backgroundColor: color }} />
+          ))}
+        </View>
+      );
+    }
+    return <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: color }} />;
+  })();
+
+  return (
+    <View accessible={false} importantForAccessibility="no-hide-descendants">
+      {mark}
+    </View>
+  );
 }
 
 type TabIconProps = ComponentProps<typeof View> & { color: string };
@@ -82,6 +90,7 @@ export function TabsNavigator() {
         component={HomeScreen}
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({ color }: TabIconProps) => <TabMark color={color} shape="circle" />,
         }}
       />
@@ -90,6 +99,7 @@ export function TabsNavigator() {
         component={StatsScreen}
         options={{
           title: 'Stats',
+          tabBarAccessibilityLabel: 'Stats tab',
           tabBarIcon: ({ color }: TabIconProps) => <TabMark color={color} shape="grid" />,
         }}
       />
@@ -98,6 +108,7 @@ export function TabsNavigator() {
         component={SettingsScreen}
         options={{
           title: 'Settings',
+          tabBarAccessibilityLabel: 'Settings tab',
           tabBarIcon: ({ color }: TabIconProps) => <TabMark color={color} shape="sliders" />,
         }}
       />

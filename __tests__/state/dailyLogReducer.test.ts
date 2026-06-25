@@ -47,6 +47,87 @@ describe('dailyReducer', () => {
     expect(s.hydrated).toBe(true);
   });
 
+  // ---- recent / dot-grid sync (regression) -----------------------------
+
+  it('LogGlass reflects today\'s new count in recent for the dot grid', () => {
+    const s = dailyReducer(makeState({ date: '2026-06-23' }), { type: 'LogGlass' });
+    expect(s.recent).toContainEqual({
+      date: '2026-06-23',
+      eyeBreaks: 0,
+      waterGlasses: 1,
+    });
+  });
+
+  it('LogGlass inserts today into an empty recent array', () => {
+    const s = dailyReducer(makeState({ date: '2026-06-23', recent: [] }), {
+      type: 'LogGlass',
+    });
+    expect(s.recent).toEqual([
+      { date: '2026-06-23', eyeBreaks: 0, waterGlasses: 1 },
+    ]);
+  });
+
+  it('LogGlass replaces the existing today row instead of duplicating', () => {
+    const s = dailyReducer(
+      makeState({
+        date: '2026-06-23',
+        waterGlasses: 0,
+        recent: [{ date: '2026-06-23', eyeBreaks: 0, waterGlasses: 0 }],
+      }),
+      { type: 'LogGlass' }
+    );
+    expect(s.recent).toHaveLength(1);
+    expect(s.recent[0]).toEqual({
+      date: '2026-06-23',
+      eyeBreaks: 0,
+      waterGlasses: 1,
+    });
+  });
+
+  it('UndoGlass reflects today\'s new count in recent', () => {
+    const s = dailyReducer(
+      makeState({
+        date: '2026-06-23',
+        waterGlasses: 3,
+        recent: [{ date: '2026-06-23', eyeBreaks: 0, waterGlasses: 3 }],
+      }),
+      { type: 'UndoGlass' }
+    );
+    expect(s.recent).toContainEqual({
+      date: '2026-06-23',
+      eyeBreaks: 0,
+      waterGlasses: 2,
+    });
+  });
+
+  it('CompleteBreak reflects today\'s new eye count in recent', () => {
+    const s = dailyReducer(
+      makeState({ date: '2026-06-23', recent: [] }),
+      { type: 'CompleteBreak' }
+    );
+    expect(s.recent).toContainEqual({
+      date: '2026-06-23',
+      eyeBreaks: 1,
+      waterGlasses: 0,
+    });
+  });
+
+  it('recent stays capped at 7 entries after an action', () => {
+    const recent = Array.from({ length: 7 }, (_, i) => ({
+      date: `2026-06-${15 + i}`,
+      eyeBreaks: 1,
+      waterGlasses: 1,
+    }));
+    const s = dailyReducer(
+      makeState({ date: '2026-06-23', recent }),
+      { type: 'LogGlass' }
+    );
+    expect(s.recent).toHaveLength(7);
+    const dates = s.recent.map((log) => log.date);
+    expect(dates).toContain('2026-06-23');
+    expect(dates).not.toContain('2026-06-15'); // oldest dropped
+  });
+
   // ---- UndoGlass --------------------------------------------------------
 
   it('UndoGlass decrements waterGlasses by 1', () => {

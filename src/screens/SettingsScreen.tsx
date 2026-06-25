@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, Switch, TextInput, View, type TextStyle, type ViewStyle } from 'react-native';
 
-import { Screen } from '../components';
+import { Screen, Text } from '../components';
 import { useSettings } from '../state/SettingsProvider';
 import { useTheme } from '../theme';
 
@@ -36,7 +36,7 @@ export function SettingsScreen() {
 
   // ---- shared row styles --------------------------------------------------
 
-  const row: Parameters<typeof View>[0]['style'] = {
+  const row: ViewStyle = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -46,21 +46,21 @@ export function SettingsScreen() {
     gap: theme.spacing.md,
   };
 
-  const label: Parameters<typeof Text>[0]['style'] = {
+  const label: TextStyle = {
     color: theme.colors.text,
     fontSize: theme.typography.body,
     fontFamily: theme.typography.familyRegular,
     flexShrink: 1,
   };
 
-  const muted: Parameters<typeof Text>[0]['style'] = {
+  const muted: TextStyle = {
     color: theme.colors.textMuted,
     fontSize: theme.typography.caption,
     fontFamily: theme.typography.familyRegular,
     flexShrink: 0,
   };
 
-  const input: Parameters<typeof TextInput>[0]['style'] = {
+  const input: TextStyle = {
     color: theme.colors.text,
     fontSize: theme.typography.body,
     fontFamily: theme.typography.familyRegular,
@@ -111,27 +111,41 @@ export function SettingsScreen() {
 
         {/* ---- Notification toggles ---- */}
 
-        <View style={row}>
+        <Pressable
+          onPress={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
+          accessible={false}
+          style={row}
+        >
           <Text style={label}>Reminder sounds</Text>
           <Switch
             value={settings.soundEnabled}
             onValueChange={(v) => updateSettings({ soundEnabled: v })}
             trackColor={{ true: theme.colors.primary }}
             accessibilityLabel="Reminder sounds"
+            accessibilityHint="Plays a soft chime with each reminder"
           />
-        </View>
+        </Pressable>
 
-        <View style={row}>
+        <Pressable
+          onPress={() => updateSettings({ waterEnabled: !settings.waterEnabled })}
+          accessible={false}
+          style={row}
+        >
           <Text style={label}>Water reminders</Text>
           <Switch
             value={settings.waterEnabled}
             onValueChange={(v) => updateSettings({ waterEnabled: v })}
             trackColor={{ true: theme.colors.primary }}
             accessibilityLabel="Water reminders"
+            accessibilityHint="Sends gentle hydration nudges during active hours"
           />
-        </View>
+        </Pressable>
 
-        <View style={row}>
+        <Pressable
+          onPress={() => updateSettings({ eyeEnabled: !settings.eyeEnabled })}
+          accessible={false}
+          style={row}
+        >
           <View style={{ flexShrink: 1 }}>
             <Text style={label}>Eye reminders</Text>
             <Text style={muted}>
@@ -143,8 +157,9 @@ export function SettingsScreen() {
             onValueChange={(v) => updateSettings({ eyeEnabled: v })}
             trackColor={{ true: theme.colors.primary }}
             accessibilityLabel="Eye reminders"
+            accessibilityHint="Sends gentle 20-20-20 eye-rest nudges during active hours"
           />
-        </View>
+        </Pressable>
 
         {/* ---- Daily water goal ---- */}
 
@@ -159,6 +174,9 @@ export function SettingsScreen() {
             maxLength={2}
             style={input}
             accessibilityLabel="Daily water goal in glasses"
+            accessibilityHint="Enter a number from 1 to 20"
+            allowFontScaling
+            maxFontSizeMultiplier={1.5}
           />
         </View>
 
@@ -186,9 +204,12 @@ export function SettingsScreen() {
             keyboardType="numbers-and-punctuation"
             maxLength={5}
             style={input}
-            accessibilityLabel="Active hours start, format HH colon mm"
+            accessibilityLabel="Active hours start"
+            accessibilityHint="24-hour time in HH:MM format"
             placeholder="HH:MM"
             placeholderTextColor={theme.colors.textMuted}
+            allowFontScaling
+            maxFontSizeMultiplier={1.5}
           />
         </View>
 
@@ -206,9 +227,12 @@ export function SettingsScreen() {
             keyboardType="numbers-and-punctuation"
             maxLength={5}
             style={input}
-            accessibilityLabel="Active hours end, format HH colon mm"
+            accessibilityLabel="Active hours end"
+            accessibilityHint="24-hour time in HH:MM format"
             placeholder="HH:MM"
             placeholderTextColor={theme.colors.textMuted}
+            allowFontScaling
+            maxFontSizeMultiplier={1.5}
           />
         </View>
 

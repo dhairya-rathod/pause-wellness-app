@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS settings (
   soundEnabled INTEGER NOT NULL,
   themeMode TEXT NOT NULL,
   eyeEnabled INTEGER NOT NULL,
-  eyePaused INTEGER NOT NULL,
   waterEnabled INTEGER NOT NULL,
   onboardingComplete INTEGER NOT NULL
 );

@@ -91,3 +91,8 @@ jest.mock('react-native-safe-area-context', () => {
     useSafeArea: () => ({ insets: defaultInsets, frame: defaultFrame }),
   };
 });
+
+// Silence AccessibilityInfo.announceForAccessibility calls from EyeRestScreen tests.
+const { AccessibilityInfo } = require('react-native');
+jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+AccessibilityInfo.isScreenReaderEnabled = jest.fn(() => Promise.resolve(false));

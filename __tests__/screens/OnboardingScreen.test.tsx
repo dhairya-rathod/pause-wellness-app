@@ -50,14 +50,18 @@ async function renderOnboarding(repo: InMemoryRepository) {
 }
 
 describe('OnboardingScreen', () => {
-  it('renders the first onboarding step', async () => {
+  it('renders the first onboarding step with a hint', async () => {
     const repo = new InMemoryRepository({
       onboardingComplete: false,
     });
-    const { getByText } = await renderOnboarding(repo);
+    const { getByText, getByRole } = await renderOnboarding(repo);
 
     expect(getByText('Pause')).toBeTruthy();
-    expect(getByText('Next')).toBeTruthy();
+
+    const nextButton = getByRole('button', { name: 'Next' });
+    expect(nextButton.props.accessibilityHint).toBe(
+      'Continue to the next onboarding step'
+    );
   });
 
   it('steps through all 4 steps and marks onboarding complete', async () => {

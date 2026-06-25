@@ -25,6 +25,9 @@ describe('SettingsScreen', () => {
 
     const toggle = getByRole('switch', { name: 'Reminder sounds' });
     expect(toggle.props.value).toBe(true);
+    expect(toggle.props.accessibilityHint).toBe(
+      'Plays a soft chime with each reminder'
+    );
 
     fireEvent(toggle, 'valueChange', false);
     await waitFor(async () => {
@@ -37,6 +40,9 @@ describe('SettingsScreen', () => {
     const { getByRole } = await renderSettings(repo);
 
     const toggle = getByRole('switch', { name: 'Water reminders' });
+    expect(toggle.props.accessibilityHint).toBe(
+      'Sends gentle hydration nudges during active hours'
+    );
     fireEvent(toggle, 'valueChange', false);
 
     await waitFor(async () => {
@@ -44,13 +50,12 @@ describe('SettingsScreen', () => {
     });
   });
 
-  it('shows the default goal value', async () => {
+  it('shows the default goal value with a hint', async () => {
     const repo = new InMemoryRepository({ waterGoalGlasses: 6 });
     const { getByDisplayValue } = await renderSettings(repo);
 
-    await waitFor(() => {
-      expect(getByDisplayValue('6')).toBeTruthy();
-    });
+    const input = await waitFor(() => getByDisplayValue('6'));
+    expect(input.props.accessibilityHint).toBe('Enter a number from 1 to 20');
   });
 
   it('shows current active hours', async () => {

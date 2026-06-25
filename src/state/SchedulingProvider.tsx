@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   type ReactNode,
 } from 'react';
 import * as Notifications from 'expo-notifications';
@@ -53,24 +54,39 @@ export function SchedulingProvider({ children }: { children: ReactNode }) {
     }
   }, [repo]);
 
-  // ---- mount: ensure channels → reschedule ----------------------------
+  // ---- mount: create channels (idempotent) -----------------------------
 
   useEffect(() => {
-    (async () => {
-      try {
-        await ensureNotificationChannels();
-      } catch {
-        // Channels are best-effort.
-      }
-      await runReschedule();
-    })();
-  }, [runReschedule]);
+    ensureNotificationChannels().catch(() => {});
+  }, []);
 
-  // ---- reschedule on settings change -----------------------------------
+  // ---- reschedule on scheduling-relevant settings change ----------------
+  //
+  // We derive a stable string key rather than using the whole `settings`
+  // object so the post-load "same values, new reference" render does NOT
+  // trigger a second (concurrent) reschedule on mount. Previously the
+  // mount-effect and the settings-effect both fired on the initial commit,
+  // causing overlapping cancel+schedule promises — orphaned native
+  // notifications whose IDs weren't tracked in the repository and that
+  // could fire at unexpected times.
+
+  const schedulingKey = useMemo(
+    () =>
+      [
+        settings.waterEnabled,
+        settings.eyeEnabled,
+        settings.eyePaused,
+        settings.activeHoursStart,
+        settings.activeHoursEnd,
+        settings.waterGoalGlasses,
+        settings.soundEnabled,
+      ].join('|'),
+    [settings],
+  );
 
   useEffect(() => {
     runReschedule();
-  }, [runReschedule, settings]);
+  }, [runReschedule, schedulingKey]);
 
   return (
     <SchedulingContext.Provider value={{ rescheduleWater: runReschedule }}>

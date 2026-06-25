@@ -1,7 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
 
 import { EyeRestScreen, WaterLogScreen, OnboardingScreen } from '../screens';
+import { Text } from '../components';
 import { useTheme } from '../theme';
 import { TabsNavigator } from './TabsNavigator';
 import { RouteNames, type RootStackParamList } from './routes';
@@ -30,6 +31,7 @@ export function RootNavigator({ initialRouteName }: { initialRouteName: keyof Ro
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel="Close"
+      accessibilityHint="Closes this screen"
       onPress={onPress}
       style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >

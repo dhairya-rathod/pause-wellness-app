@@ -22,8 +22,9 @@ export const light = {
     accent: '#C98B6B', // terracotta
     // text
     text: '#2C3A33', // charcoal-green
-    textMuted: '#5C6B62', // muted charcoal-green
+    textMuted: '#53605A', // muted charcoal-green, 4.5:1 on surfaceAlt
     textOnPrimary: '#1B2A22', // dark text on sage
+    primaryText: '#4E6254', // darker sage for text on light backgrounds (5.8:1 on cream, 4.6:1 on surfaceAlt)
     // lines & feedback
     border: '#D8CFBC', // sand border
     overlay: 'rgba(44, 58, 51, 0.35)', // calm scrim for modals
@@ -41,6 +42,7 @@ export const dark = {
     text: '#E6EDE7', // light sage-white
     textMuted: '#A8B6AC', // muted light sage
     textOnPrimary: '#1B2A22', // dark text on sage stays readable
+    primaryText: '#8EB9A3', // soft sage reads well on dark backgrounds
     border: '#3A4F40', // sage-tinted border
     overlay: 'rgba(0, 0, 0, 0.5)',
   },

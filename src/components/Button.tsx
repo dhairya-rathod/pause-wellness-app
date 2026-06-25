@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
-import { Pressable, Text, type ViewStyle } from 'react-native';
+import { Pressable, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../theme';
+import { Text } from './Text';
 
 type ButtonProps = {
   label: string;
@@ -9,6 +10,8 @@ type ButtonProps = {
   /** accessibilityLabel defaults to label; pass an explicit one when the
    * visible label is ambiguous (e.g. an icon-only button). */
   accessibilityLabel?: string;
+  /** Spoken after the label/state, describing what the button does. */
+  accessibilityHint?: string;
   variant?: 'primary' | 'secondary';
   style?: ViewStyle;
   children?: ReactNode;
@@ -22,6 +25,7 @@ export function Button({
   label,
   onPress,
   accessibilityLabel,
+  accessibilityHint,
   variant = 'primary',
   style,
   children,
@@ -34,6 +38,7 @@ export function Button({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       style={({ pressed }) => [
         {
           backgroundColor: isPrimary ? theme.colors.primary : theme.colors.surface,

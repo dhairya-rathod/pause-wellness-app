@@ -49,7 +49,12 @@ describe('WaterLogScreen', () => {
 
     // The store loads async — the progress bar has an accessibilityLabel
     // like "0 of 8 glasses" once the data is loaded.
-    await findByLabelText('0 of 8 glasses');
+    const progress = await findByLabelText('0 of 8 glasses');
+    expect(progress.props.accessibilityValue).toEqual({
+      min: 0,
+      max: 8,
+      now: 0,
+    });
   });
 
   it('logs a glass and persists', async () => {
@@ -58,6 +63,9 @@ describe('WaterLogScreen', () => {
 
     const logButton = await waitFor(() =>
       getByRole('button', { name: 'Log a glass' })
+    );
+    expect(logButton.props.accessibilityHint).toBe(
+      "Adds one glass to today's count"
     );
     fireEvent.press(logButton);
 
@@ -75,9 +83,11 @@ describe('WaterLogScreen', () => {
     fireEvent.press(await findByRole('button', { name: 'Log a glass' }));
 
     // Wait for the undo button to appear (state update is async via setState).
-    fireEvent.press(
-      await findByRole('button', { name: 'Undo last glass' })
+    const undoButton = await findByRole('button', { name: 'Undo last glass' });
+    expect(undoButton.props.accessibilityHint).toBe(
+      'Removes the last logged glass'
     );
+    fireEvent.press(undoButton);
 
     const today = todayKey();
     const saved = await repo.getLog(today);

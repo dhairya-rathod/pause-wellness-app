@@ -54,9 +54,9 @@ describe('StatsScreen', () => {
     await findByLabelText('4 water glasses today');
   });
 
-  it('renders 7-day dot grids for eye breaks and water', async () => {
+  it('renders 7-day dot grids for eye breaks and water with accessibility values', async () => {
     const repo = new InMemoryRepository({ waterGoalGlasses: 8 });
-    const { getAllByTestId } = await renderStats(repo);
+    const { getAllByTestId, findByLabelText } = await renderStats(repo);
 
     await waitFor(() => {
       const eyeDots = getAllByTestId(/eye-dot-/);
@@ -64,6 +64,24 @@ describe('StatsScreen', () => {
 
       const waterDots = getAllByTestId(/water-dot-/);
       expect(waterDots).toHaveLength(7);
+    });
+
+    const eyeGrid = await findByLabelText('Eye breaks: 0 of the last 7 days');
+    expect(eyeGrid.props.accessibilityRole).toBe('progressbar');
+    expect(eyeGrid.props.accessibilityValue).toEqual({
+      min: 0,
+      max: 7,
+      now: 0,
+    });
+
+    const waterGrid = await findByLabelText(
+      'Water glasses: 0 of the last 7 days'
+    );
+    expect(waterGrid.props.accessibilityRole).toBe('progressbar');
+    expect(waterGrid.props.accessibilityValue).toEqual({
+      min: 0,
+      max: 7,
+      now: 0,
     });
   });
 

@@ -18,10 +18,10 @@ Demoable: enable TalkBack and navigate Home, Stats, Settings, EyeRest, and Water
 
 ## Acceptance criteria
 
-- [ ] All interactive controls have TalkBack labels.
-- [ ] Text scales with the system font setting without clipping or overlap.
-- [ ] Key text/surface pairs meet contrast thresholds in light and dark themes.
-- [ ] Navigating the app with TalkBack is coherent (labels describe actions, not generic "button").
+- [x] All interactive controls have TalkBack labels.
+- [x] Text scales with the system font setting without clipping or overlap.
+- [x] Key text/surface pairs meet contrast thresholds in light and dark themes.
+- [x] Navigating the app with TalkBack is coherent (labels describe actions, not generic "button").
 
 ## Blocked by
 

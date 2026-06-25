@@ -38,6 +38,7 @@ export function DotGrid({ feature, today, recent, accessibilityLabel }: DotGridP
         accessibilityLabel ??
         `${feature === 'eye' ? 'Eye breaks' : 'Water glasses'}: ${filledDays} of the last 7 days`
       }
+      accessibilityValue={{ min: 0, max: 7, now: filledDays }}
       style={{ flexDirection: 'row', gap: theme.spacing.sm }}
     >
       {days.map((date) => {

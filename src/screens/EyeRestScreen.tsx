@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-import { Screen } from '../components';
+import { Screen, TicksRing, Text } from '../components';
 import { useDailyLog } from '../state/DailyLogProvider';
 import { useTheme } from '../theme';
 
@@ -36,14 +36,20 @@ export function EyeRestScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // Persist + dismiss exactly once when the countdown reaches 0.
+  // Announce completion, persist, and dismiss exactly once when the countdown
+  // reaches 0. The short delay lets the assertive announcement finish before
+  // the modal disappears.
   useEffect(() => {
     if (secondsLeft === 0 && !completedRef.current) {
       completedRef.current = true;
-      (async () => {
-        await completeBreak();
-        navigation.goBack();
-      })();
+      AccessibilityInfo.announceForAccessibility('Eye rest complete');
+      const t = setTimeout(() => {
+        (async () => {
+          await completeBreak();
+          navigation.goBack();
+        })();
+      }, 600);
+      return () => clearTimeout(t);
     }
   }, [secondsLeft, completeBreak, navigation]);
 
@@ -75,47 +81,18 @@ export function EyeRestScreen() {
     outputRange: [0.85, 1.15],
   });
 
-  // ---- countdown ring (two-half-circles rotation) ----------------------
-
-  const ringAnim = useRef(new Animated.Value(DURATION_S)).current;
-
-  useEffect(() => {
-    Animated.timing(ringAnim, {
-      toValue: 0,
-      duration: DURATION_S * 1000,
-      useNativeDriver: false,
-    }).start();
-  }, [ringAnim]);
-
-  const progress = ringAnim.interpolate({
-    inputRange: [0, DURATION_S],
-    outputRange: [0, 1],
-  });
-
-  // Right half: spins 0° → 180° over the first half of progress
-  const rightHalfRotate = progress.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: ['0deg', '180deg', '180deg'],
-  });
-
-  // Left half: spins 0° → 180° over the second half of progress
-  const leftHalfRotate = progress.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: ['0deg', '0deg', '180deg'],
-  });
-
-  // Left half clip only becomes visible when right half is done
-  const leftHalfOpacity = progress.interpolate({
-    inputRange: [0, 0.49, 0.5, 1],
-    outputRange: [0, 0, 1, 1],
-  });
+  // ---- countdown ring (depleting radial ticks) --------------------------
+  //
+  // The ring is `DURATION_S` radial ticks around a circle. `lit` follows
+  // `secondsLeft`, so each per-second tick of the setInterval turns off one
+  // tick clockwise from 12 o'clock. Previously the ring used two rotated
+  // full-ring outlines clipped to halves — but a rotationally-symmetric
+  // annulus pivoted at its own center has zero visible shape change, so
+  // the only motion was a single left-half opacity flip at the 10s mark.
+  // Driving the ring off the per-second state gives a visible per-second
+  // countdown and a clean regression seam (testID per tick).
 
   const RING = 200;
-  const BORDER = 12;
-  const HALF = RING / 2;
-
-  const progressColor = theme.colors.primary;
-  const trackColor = theme.colors.surface;
 
   // ---- render ---------------------------------------------------------
 
@@ -159,81 +136,18 @@ export function EyeRestScreen() {
         {/* ---- countdown ring ---- */}
         <View
           accessibilityLabel={`${secondsLeft} seconds remaining`}
-          style={{ width: RING, height: RING }}
+          accessibilityLiveRegion="polite"
         >
-          {/* Track (full ring) */}
-          <View
-            style={{
-              position: 'absolute',
-              width: RING,
-              height: RING,
-              borderRadius: HALF,
-              borderWidth: BORDER,
-              borderColor: trackColor,
-            }}
-          />
-
-          {/* Right half clip — reveals progress arc 0° → 180° */}
-          <View
-            style={{
-              position: 'absolute',
-              left: HALF,
-              top: 0,
-              width: HALF,
-              height: RING,
-              overflow: 'hidden',
-            }}
-          >
-            <Animated.View
-              style={{
-                position: 'absolute',
-                left: -HALF,
-                top: 0,
-                width: RING,
-                height: RING,
-                borderRadius: HALF,
-                borderWidth: BORDER,
-                borderColor: progressColor,
-                transform: [{ rotate: rightHalfRotate }],
-              }}
-            />
-          </View>
-
-          {/* Left half clip — reveals progress arc 180° → 360° */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: HALF,
-              height: RING,
-              overflow: 'hidden',
-              opacity: leftHalfOpacity,
-            }}
-          >
-            <Animated.View
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: RING,
-                height: RING,
-                borderRadius: HALF,
-                borderWidth: BORDER,
-                borderColor: progressColor,
-                transform: [{ rotate: leftHalfRotate }],
-              }}
-            />
-          </Animated.View>
+          <TicksRing lit={secondsLeft} total={DURATION_S} size={RING} />
 
           {/* Center content: breathing circle + countdown number */}
           <View
             style={{
               position: 'absolute',
-              top: BORDER,
-              left: BORDER,
-              width: RING - BORDER * 2,
-              height: RING - BORDER * 2,
+              top: RING / 2 - 40,
+              left: RING / 2 - 40,
+              width: 80,
+              height: 80,
               justifyContent: 'center',
               alignItems: 'center',
             }}

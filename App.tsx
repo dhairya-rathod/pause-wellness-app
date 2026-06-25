@@ -56,7 +56,12 @@ function ThemedApp({
       (response) =>
         routeNotificationResponse(response, (route, params) => {
           if (navigationRef.isReady()) {
-            navigationRef.navigate(route, params);
+            // routeNotificationResponse already narrows route to valid modal
+            // routes; the generic navigation ref overload is too strict here.
+            (navigationRef.navigate as (name: string, params?: unknown) => void)(
+              route,
+              params,
+            );
           }
         }),
     );

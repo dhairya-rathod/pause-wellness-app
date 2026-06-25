@@ -31,6 +31,25 @@ function computeHydrated(waterGlasses: number, goal: number): boolean {
 }
 
 /**
+ * Replace (or insert) the `state.date` row inside `recent` so the 7-day dot
+ * grids reflect today's live counts without a repository round-trip.
+ *
+ * `recent` is stored newest-first; the inserted/replaced row keeps that order.
+ * Capped at 7 entries to match the cap rollover enforces.
+ */
+function syncTodayInRecent(state: DailyState): DailyLog[] {
+  const today: DailyLog = {
+    date: state.date,
+    eyeBreaks: state.eyeBreaks,
+    waterGlasses: state.waterGlasses,
+  };
+  const without = state.recent.filter((log) => log.date !== state.date);
+  return [today, ...without]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 7);
+}
+
+/**
  * Roll the state over to a new calendar day.
  *
  * Pure function: if the stored day matches `today`, nothing changes. Otherwise,
@@ -87,14 +106,18 @@ export function dailyReducer(state: DailyState, action: DailyAction): DailyState
   switch (action.type) {
     case 'LogGlass': {
       const waterGlasses = state.waterGlasses + 1;
-      return { ...state, waterGlasses, hydrated: computeHydrated(waterGlasses, state.goal) };
+      const next = { ...state, waterGlasses, hydrated: computeHydrated(waterGlasses, state.goal) };
+      return { ...next, recent: syncTodayInRecent(next) };
     }
     case 'UndoGlass': {
       const waterGlasses = Math.max(0, state.waterGlasses - 1);
-      return { ...state, waterGlasses, hydrated: computeHydrated(waterGlasses, state.goal) };
+      const next = { ...state, waterGlasses, hydrated: computeHydrated(waterGlasses, state.goal) };
+      return { ...next, recent: syncTodayInRecent(next) };
     }
-    case 'CompleteBreak':
-      return { ...state, eyeBreaks: state.eyeBreaks + 1 };
+    case 'CompleteBreak': {
+      const next = { ...state, eyeBreaks: state.eyeBreaks + 1 };
+      return { ...next, recent: syncTodayInRecent(next) };
+    }
     case 'Rollover':
       return rollover(state, action.date);
     case 'UpdateRecent':

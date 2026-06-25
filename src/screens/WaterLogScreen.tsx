@@ -1,6 +1,6 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Screen } from '../components';
+import { Button, Screen, Text } from '../components';
 import { useDailyLog } from '../state/DailyLogProvider';
 import { useTheme } from '../theme';
 
@@ -43,15 +43,15 @@ export function WaterLogScreen() {
 
           {/* ---- gentle hydrated state ---- */}
           {hydrated && (
-            <Text
-              style={{
-                color: theme.colors.primary,
-                fontSize: theme.typography.body,
-                fontFamily: theme.typography.familyRegular,
-              }}
-            >
-              You're hydrated — well done.
-            </Text>
+          <Text
+            style={{
+              color: theme.colors.primaryText,
+              fontSize: theme.typography.body,
+              fontFamily: theme.typography.familyRegular,
+            }}
+          >
+            You're hydrated — well done.
+          </Text>
           )}
         </View>
 
@@ -63,7 +63,13 @@ export function WaterLogScreen() {
             backgroundColor: theme.colors.surface,
             overflow: 'hidden',
           }}
+          accessibilityRole="progressbar"
           accessibilityLabel={`${waterGlasses} of ${goal} glasses`}
+          accessibilityValue={{
+            min: 0,
+            max: goal,
+            now: waterGlasses,
+          }}
         >
           <View
             style={{
@@ -83,6 +89,7 @@ export function WaterLogScreen() {
             accessibilityLabel={
               hydrated ? 'Log another glass' : 'Log a glass'
             }
+            accessibilityHint="Adds one glass to today's count"
           />
           {waterGlasses > 0 && (
             <Button
@@ -90,6 +97,7 @@ export function WaterLogScreen() {
               variant="secondary"
               onPress={undoGlass}
               accessibilityLabel="Undo last glass"
+              accessibilityHint="Removes the last logged glass"
             />
           )}
         </View>

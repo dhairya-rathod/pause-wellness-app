@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button, Screen } from '../components';
+import { Button, Screen, Text } from '../components';
 import { useTheme } from '../theme';
 import { RouteNames, type RootStackParamList } from '../navigation/routes';
 import { useRepository } from '../data';
@@ -32,7 +32,7 @@ export function OnboardingScreen() {
   };
 
   return (
-    <Screen scroll={false}>
+    <Screen scroll={false} edges={['top', 'bottom']}>
       <View style={{ flex: 1, justifyContent: 'center', gap: theme.spacing.xxl }}>
 
         {/* ---- Step indicators ---- */}
@@ -83,6 +83,11 @@ export function OnboardingScreen() {
           label={step < 3 ? 'Next' : 'Allow reminders'}
           onPress={step < 3 ? () => setStep((s) => s + 1) : finish}
           accessibilityLabel={step < 3 ? 'Next' : 'Allow reminders'}
+          accessibilityHint={
+            step < 3
+              ? 'Continue to the next onboarding step'
+              : 'Request permission to send gentle reminders'
+          }
         />
       </View>
     </Screen>
